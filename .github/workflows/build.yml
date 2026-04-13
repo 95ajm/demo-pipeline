@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  workflow_call:
+    outputs:
+      image-tag:
+        description: "The image tag built and pushed to GHCR"
+        value: ${{ jobs.build.outputs.image-tag }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.set-tag.outputs.tag }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: set-tag
+        run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      # Note: this workflow only builds and pushes on main called from ci.yml
+      # In a team environment with QA dependency on feature branch artifacts,
+      # this job could be extended to push !main builds to a separate dev registry
+      # (a private container registry for example) for testing before merge,
+      # while reserving GHCR for main builds only.
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }} \
+            ./app
+          docker push \
+            ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }}
+
+      - name: Write build summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | \`ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
