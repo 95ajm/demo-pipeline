@@ -18,12 +18,3 @@ jobs:
     permissions:
       contents: read
       packages: write
-
-  deploy:
-    needs: build
-    uses: ./.github/workflows/cd.yml
-    with:
-      image-tag: ${{ needs.build.outputs.image-tag }}
-    secrets: inherit
-    permissions:
-      contents: write
