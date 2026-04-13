@@ -1,0 +1,6 @@
+App deployed successfully.
+
+To access the app:
+  kubectl port-forward svc/{{ include "demo-pipeline.fullname" . }} 8080:{{ .Values.service.port }}
+
+Then visit: http://localhost:8080
