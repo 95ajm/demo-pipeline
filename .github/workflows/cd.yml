@@ -39,7 +39,7 @@ jobs:
           echo "ArgoCD automated sync policy handles deployment."
           echo "The commit above triggers ArgoCD reconciliation loop."
           echo ""
-          echo "In production with a remote cluster this step would:"
+          echo "In production with a remote cluster this step could do something like:"
           echo "  argocd app sync demo-pipeline"
           echo "  argocd app wait demo-pipeline --health --timeout 120"
 
