@@ -1,6 +1,8 @@
 name: Build
 
 on:
+  pull_request:
+    branches: [main]
   workflow_call:
     outputs:
       image-tag:
@@ -22,24 +24,27 @@ jobs:
         id: set-tag
         run: echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
 
-      # Note: this workflow only builds and pushes on main called from ci.yml
-      # In a team environment with QA dependency on feature branch artifacts,
-      # this job could be extended to push !main builds to a separate dev registry
-      # (a private container registry for example) for testing before merge,
-      # while reserving GHCR for main builds only.
+      # Builds on every PR
+      # Login and push to GHCR only occur on merge to main via workflow_call.
+      # For QA testing, PR builds could push to a separate container registry
+      # for consumption before merge, reserving GHCR for production-ready builds.
+      - name: Build image
+        run: |
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }} \
+            ./app
 
       - name: Log in to GHCR
+        if: github.event_name == 'workflow_call'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push image
+      
+      - name: Push image to GHCR
+        if: github.event_name == 'workflow_call'
         run: |
-          docker build \
-            -t ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }} \
-            ./app
           docker push \
             ghcr.io/${{ github.repository_owner }}/demo-pipeline:${{ github.sha }}
 
