@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/95ajm/demo-pipeline
   pullPolicy: IfNotPresent
-  tag: "c08c13809d1f5f0b69114b28cc149dfe61bb62af"
+  tag: "54569894dbe323ed9bb365d4c58b72bb2b10b7a6"
 
 service:
   type: ClusterIP
